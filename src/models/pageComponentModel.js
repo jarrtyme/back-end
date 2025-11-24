@@ -1,4 +1,6 @@
 const mongoose = require('mongoose')
+const { DISPLAY_TYPE_VALUES, DEFAULT_DISPLAY_TYPE } = require('../config/displayType')
+const { MEDIA_TYPE_VALUES, DEFAULT_MEDIA_TYPE } = require('../config/mediaType')
 
 /**
  * 页面组件数据模型
@@ -16,12 +18,12 @@ const PageComponentSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, '组件名称最多100个字符']
   },
-  // 展示类型：'carousel', 'grid', 'list' 等
+  // 展示类型：'carousel', 'grid', 'list', 'scroll-snap', 'seamless', 'video' 等
   displayType: {
     type: String,
     required: true,
-    enum: ['carousel', 'grid', 'list', 'scroll-snap', 'seamless'],
-    default: 'carousel',
+    enum: DISPLAY_TYPE_VALUES,
+    default: DEFAULT_DISPLAY_TYPE,
     trim: true
   },
   // 组件项数组
@@ -46,7 +48,8 @@ const PageComponentSchema = new mongoose.Schema({
           type: {
             type: String,
             required: true,
-            enum: ['image', 'video'],
+            enum: MEDIA_TYPE_VALUES,
+            default: DEFAULT_MEDIA_TYPE,
             trim: true
           },
           // 文件名（可选）

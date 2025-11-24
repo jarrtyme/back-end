@@ -14,7 +14,6 @@ if (typeof require !== 'undefined') {
     dotenv.config({ path: path.join(__dirname, '../../.env') })
   } catch (e) {
     // dotenv 可能已经加载或不存在，忽略错误
-    // console.warn('无法加载 dotenv:', e.message)
   }
 }
 

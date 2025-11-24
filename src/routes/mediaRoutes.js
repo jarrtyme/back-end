@@ -105,7 +105,8 @@ router.post('/create', async (req, res) => {
       return res.error('Type and URL are required', 400)
     }
 
-    if (!['image', 'video'].includes(type)) {
+    const { isValidMediaType } = require('../config/mediaType')
+    if (!isValidMediaType(type)) {
       return res.error('Type must be "image" or "video"', 400)
     }
 

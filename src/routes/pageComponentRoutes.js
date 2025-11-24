@@ -89,7 +89,8 @@ router.post('/create', async (req, res) => {
       return res.error('Display type is required', 400)
     }
 
-    if (!['carousel', 'grid', 'list', 'scroll-snap', 'seamless'].includes(displayType)) {
+    const { isValidDisplayType } = require('../config/displayType')
+    if (!isValidDisplayType(displayType)) {
       return res.error('Invalid display type', 400)
     }
 
@@ -103,7 +104,8 @@ router.post('/create', async (req, res) => {
       if (!item.media || !item.media.url || !item.media.type) {
         return res.error('Each item must have media with url and type', 400)
       }
-      if (!['image', 'video'].includes(item.media.type)) {
+      const { isValidMediaType } = require('../config/mediaType')
+      if (!isValidMediaType(item.media.type)) {
         return res.error('Media type must be "image" or "video"', 400)
       }
       if (!Array.isArray(item.descriptions)) {
@@ -169,9 +171,8 @@ router.post('/update', async (req, res) => {
 
     // 验证 displayType（如果提供）
     if (updateFields.displayType) {
-      if (
-        !['carousel', 'grid', 'list', 'scroll-snap', 'seamless'].includes(updateFields.displayType)
-      ) {
+      const { isValidDisplayType } = require('../config/displayType')
+      if (!isValidDisplayType(updateFields.displayType)) {
         return res.error('Invalid display type', 400)
       }
     }
@@ -186,7 +187,8 @@ router.post('/update', async (req, res) => {
         if (!item.media || !item.media.url || !item.media.type) {
           return res.error('Each item must have media with url and type', 400)
         }
-        if (!['image', 'video'].includes(item.media.type)) {
+        const { isValidMediaType } = require('../config/mediaType')
+        if (!isValidMediaType(item.media.type)) {
           return res.error('Media type must be "image" or "video"', 400)
         }
         if (!Array.isArray(item.descriptions)) {

@@ -200,7 +200,8 @@ router.post(
       const { role } = req.body
       const currentUser = req.user
 
-      if (!role || !['super_admin', 'admin', 'vip', 'user'].includes(role)) {
+      const { isValidRole } = require('../config/role')
+      if (!role || !isValidRole(role)) {
         return res.error('角色必须是super_admin、admin、vip或user', 400)
       }
 

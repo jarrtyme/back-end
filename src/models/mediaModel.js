@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const { MEDIA_TYPE_VALUES, DEFAULT_MEDIA_TYPE } = require('../config/mediaType')
 
 /**
  * 媒体库数据模型
@@ -13,7 +14,8 @@ const MediaSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['image', 'video'],
+    enum: MEDIA_TYPE_VALUES,
+    default: DEFAULT_MEDIA_TYPE,
     trim: true
   },
   // 媒体文件URL

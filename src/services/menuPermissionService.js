@@ -1,5 +1,6 @@
 const UserModel = require('../models/userModel')
 const MenuPermissionTemplateModel = require('../models/menuPermissionTemplateModel')
+const { ROLES } = require('../config/role')
 
 /**
  * 菜单权限服务
@@ -22,7 +23,7 @@ class MenuPermissionService {
 
   // 定义默认菜单权限配置（根据角色）
   static DEFAULT_PERMISSIONS = {
-    super_admin: [
+    [ROLES.SUPER_ADMIN]: [
       'dashboard',
       'management',
       'users',
@@ -34,7 +35,7 @@ class MenuPermissionService {
       'settings',
       'menu-permission'
     ],
-    admin: [
+    [ROLES.ADMIN]: [
       'dashboard',
       'management',
       'users',
@@ -46,8 +47,8 @@ class MenuPermissionService {
       'menu-permission'
       // 注意：admin 默认不包含 settings
     ],
-    vip: [], // VIP用户权限根据VIP等级和menuPermissions字段动态分配
-    user: ['dashboard'] // 普通用户只有仪表盘
+    [ROLES.VIP]: [], // VIP用户权限根据VIP等级和menuPermissions字段动态分配
+    [ROLES.USER]: ['dashboard'] // 普通用户只有仪表盘
   }
 
   // VIP等级对应的菜单权限配置
@@ -74,18 +75,18 @@ class MenuPermissionService {
    * @returns {Array<string>}
    */
   static getDefaultMenuPermissions(user) {
-    const role = user.role || 'user'
+    const role = user.role || ROLES.USER
     const vipLevel = user.vipLevel || 0
 
-    if (role === 'super_admin') {
-      return this.DEFAULT_PERMISSIONS.super_admin
+    if (role === ROLES.SUPER_ADMIN) {
+      return this.DEFAULT_PERMISSIONS[ROLES.SUPER_ADMIN]
     }
 
-    if (role === 'admin') {
-      return this.DEFAULT_PERMISSIONS.admin
+    if (role === ROLES.ADMIN) {
+      return this.DEFAULT_PERMISSIONS[ROLES.ADMIN]
     }
 
-    if (role === 'vip') {
+    if (role === ROLES.VIP) {
       if (vipLevel >= 5) {
         return this.VIP_LEVEL_PERMISSIONS[5]
       }
@@ -104,7 +105,7 @@ class MenuPermissionService {
       return ['dashboard']
     }
 
-    return this.DEFAULT_PERMISSIONS.user
+    return this.DEFAULT_PERMISSIONS[ROLES.USER]
   }
 
   /**
@@ -117,7 +118,7 @@ class MenuPermissionService {
     const customPermissions = Array.isArray(user.menuPermissions) ? user.menuPermissions : []
     const mode = user.menuPermissionMode || 'default'
 
-    if (user.role === 'super_admin') {
+    if (user.role === ROLES.SUPER_ADMIN) {
       return defaultPermissions
     }
 

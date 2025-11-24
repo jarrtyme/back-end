@@ -1,5 +1,12 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
+const { ROLE_VALUES, DEFAULT_ROLE } = require('../config/role')
+const {
+  MENU_PERMISSION_MODE_VALUES,
+  DEFAULT_MENU_PERMISSION_MODE
+} = require('../config/menuPermissionMode')
+const { VIP_LEVEL } = require('../config/vipLevel')
+const { PASSWORD_LENGTH } = require('../config/password')
 
 /**
  * 用户数据模型
@@ -44,20 +51,20 @@ const UserSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: [6, '密码至少6个字符']
+      minlength: [PASSWORD_LENGTH.MIN, `密码至少${PASSWORD_LENGTH.MIN}个字符`]
     }, // 密码 - 加密存储
 
     role: {
       type: String,
-      enum: ['super_admin', 'admin', 'vip', 'user'],
-      default: 'user'
+      enum: ROLE_VALUES,
+      default: DEFAULT_ROLE
     }, // 角色 - 超级管理员、管理员、VIP用户、普通用户
 
     vipLevel: {
       type: Number,
-      default: 0,
-      min: 0,
-      max: 10
+      default: VIP_LEVEL.MIN,
+      min: VIP_LEVEL.MIN,
+      max: VIP_LEVEL.MAX
     }, // VIP等级 - 仅VIP用户使用，0表示非VIP用户
 
     menuPermissions: {
@@ -67,8 +74,8 @@ const UserSchema = new mongoose.Schema(
 
     menuPermissionMode: {
       type: String,
-      enum: ['default', 'custom', 'template'],
-      default: 'default'
+      enum: MENU_PERMISSION_MODE_VALUES,
+      default: DEFAULT_MENU_PERMISSION_MODE
     }, // 菜单权限模式 - default 使用角色默认, custom 使用自定义数组, template 来源于模板
 
     isActive: {
