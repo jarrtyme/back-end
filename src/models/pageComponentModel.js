@@ -90,6 +90,14 @@ const PageComponentSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  // 滚动快照宽度模式：'wide'（宽模式，最大720px）或 'narrow'（窄模式，最大480px）
+  // 仅当 displayType 为 'scroll-snap' 时有效
+  widthMode: {
+    type: String,
+    enum: ['wide', 'narrow'],
+    default: 'wide',
+    trim: true
+  },
   // 创建时间
   createdAt: {
     type: Date,

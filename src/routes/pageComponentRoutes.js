@@ -132,6 +132,11 @@ router.post('/create', async (req, res) => {
       isActive: Boolean(isActive)
     }
 
+    // 如果是滚动快照类型，添加 widthMode
+    if (displayType === 'scroll-snap' && req.body.widthMode) {
+      componentData.widthMode = req.body.widthMode
+    }
+
     const component = await PageComponentService.create(componentData)
 
     res.success(component, 'Page component created successfully')
@@ -224,6 +229,20 @@ router.post('/update', async (req, res) => {
     // 处理 isActive
     if (updateFields.isActive !== undefined) {
       updateFields.isActive = Boolean(updateFields.isActive)
+    }
+
+    // 处理 widthMode（仅当 displayType 为 scroll-snap 时）
+    if (updateFields.widthMode !== undefined) {
+      if (updateFields.displayType === 'scroll-snap' || updateFields.displayType === undefined) {
+        // 验证 widthMode 值
+        if (!['wide', 'narrow'].includes(updateFields.widthMode)) {
+          return res.error('widthMode must be "wide" or "narrow"', 400)
+        }
+        updateFields.widthMode = updateFields.widthMode.trim()
+      } else {
+        // 如果不是 scroll-snap 类型，移除 widthMode
+        delete updateFields.widthMode
+      }
     }
 
     const updatedComponent = await PageComponentService.update(id, updateFields)
