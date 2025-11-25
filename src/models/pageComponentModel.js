@@ -1,6 +1,18 @@
 const mongoose = require('mongoose')
-const { DISPLAY_TYPE_VALUES, DEFAULT_DISPLAY_TYPE } = require('../config/displayType')
+const {
+  DISPLAY_TYPE_VALUES,
+  DEFAULT_DISPLAY_TYPE,
+  DISPLAY_TYPES
+} = require('../config/displayType')
 const { MEDIA_TYPE_VALUES, DEFAULT_MEDIA_TYPE } = require('../config/mediaType')
+
+const MEDIA_OPTIONAL_TYPES = [DISPLAY_TYPES.HEADER, DISPLAY_TYPES.FOOTER]
+
+const isMediaRequiredForComponent = function () {
+  const ownerComponent = typeof this.ownerDocument === 'function' ? this.ownerDocument() : null
+  const displayType = ownerComponent?.displayType
+  return !MEDIA_OPTIONAL_TYPES.includes(displayType)
+}
 
 /**
  * 页面组件数据模型
@@ -41,16 +53,32 @@ const PageComponentSchema = new mongoose.Schema({
           // 媒体URL（冗余存储，方便查询）
           url: {
             type: String,
-            required: true,
-            trim: true
+            trim: true,
+            validate: {
+              validator: function (value) {
+                if (!isMediaRequiredForComponent.call(this)) {
+                  return true
+                }
+                return typeof value === 'string' && value.length > 0
+              },
+              message: '该组件类型的媒体 URL 不能为空'
+            }
           },
           // 媒体类型：'image' 或 'video'
           type: {
             type: String,
-            required: true,
             enum: MEDIA_TYPE_VALUES,
             default: DEFAULT_MEDIA_TYPE,
-            trim: true
+            trim: true,
+            validate: {
+              validator: function (value) {
+                if (!isMediaRequiredForComponent.call(this)) {
+                  return true
+                }
+                return Boolean(value)
+              },
+              message: '该组件类型的媒体类型不能为空'
+            }
           },
           // 文件名（可选）
           filename: {
@@ -79,6 +107,12 @@ const PageComponentSchema = new mongoose.Schema({
       }
     ],
     default: []
+  },
+  // 组件跳转链接（可选）
+  link: {
+    type: String,
+    trim: true,
+    default: ''
   },
   // 排序顺序
   order: {

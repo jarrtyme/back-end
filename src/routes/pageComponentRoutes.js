@@ -79,7 +79,7 @@ router.post('/list', async (req, res) => {
 // 创建页面组件
 router.post('/create', async (req, res) => {
   try {
-    const { name, displayType, items = [], order = 0, isActive = true } = req.body
+    const { name, displayType, items = [], order = 0, isActive = true, link = '' } = req.body
 
     if (!name || !name.trim()) {
       return res.error('Component name is required', 400)
@@ -129,7 +129,8 @@ router.post('/create', async (req, res) => {
         }))
       })),
       order: parseInt(order, 10) || 0,
-      isActive: Boolean(isActive)
+      isActive: Boolean(isActive),
+      link: typeof link === 'string' ? link.trim() : ''
     }
 
     // 如果是滚动快照类型，添加 widthMode
@@ -229,6 +230,11 @@ router.post('/update', async (req, res) => {
     // 处理 isActive
     if (updateFields.isActive !== undefined) {
       updateFields.isActive = Boolean(updateFields.isActive)
+    }
+
+    // 处理 link
+    if (updateFields.link !== undefined) {
+      updateFields.link = typeof updateFields.link === 'string' ? updateFields.link.trim() : ''
     }
 
     // 处理 widthMode（仅当 displayType 为 scroll-snap 时）

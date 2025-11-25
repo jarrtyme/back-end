@@ -11,7 +11,10 @@ const DISPLAY_TYPES = {
   LIST: 'list',
   SCROLL_SNAP: 'scroll-snap',
   SEAMLESS: 'seamless',
-  VIDEO: 'video'
+  VIDEO: 'video',
+  DETAIL: 'detail',
+  HEADER: 'header',
+  FOOTER: 'footer'
 }
 
 // 展示类型值数组（用于验证）
