@@ -2,13 +2,13 @@ const mongoose = require('mongoose')
 
 /**
  * 服装数据模型
- * 
+ *
  * 该模型用于管理服装商品的完整生命周期，包括：
  * - 商品基本信息（货号、图片、价格等）
  * - 库存管理（进货、补货、剩余数量）
  * - 销售统计（售卖件数、利润计算）
  * - 成本控制（运费、退货运费）
- * 
+ *
  * 自动计算功能：
  * - 售卖件数 = 进货件数 + 补货件数 - 剩余件数
  * - 利润 = (售卖价 × 售卖件数) - (进货价 × 总进货件数) - 运费 - 退货运费
@@ -78,6 +78,11 @@ const ClothingSchema = new mongoose.Schema({
     type: Number,
     default: 0
   }, // 利润 - 商品销售利润（自动计算）
+  pageId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Page',
+    default: null
+  }, // 绑定的页面ID - 用于页面展示该服装时使用（只能绑定一个页面）
   createdAt: {
     type: Date,
     default: Date.now
@@ -90,7 +95,7 @@ const ClothingSchema = new mongoose.Schema({
 
 /**
  * 保存前中间件：自动计算售卖件数和利润
- * 
+ *
  * 在保存文档前自动执行以下计算：
  * 1. 更新修改时间
  * 2. 计算售卖件数 = 进货件数 + 补货件数 - 剩余件数
@@ -98,28 +103,28 @@ const ClothingSchema = new mongoose.Schema({
  *    - 总收入 = 售卖价 × 售卖件数
  *    - 总成本 = 进货价 × (进货件数 + 补货件数)
  */
-ClothingSchema.pre('save', function(next) {
+ClothingSchema.pre('save', function (next) {
   // 更新修改时间
   this.updatedAt = new Date()
-  
+
   // 计算售卖件数：总进货量减去剩余库存
   this.soldQuantity = this.purchaseQuantity + this.restockQuantity - this.remainingQuantity
-  
+
   // 计算利润
-  const totalRevenue = this.sellingPrice * this.soldQuantity  // 总收入
-  const totalCost = this.purchasePrice * (this.purchaseQuantity + this.restockQuantity)  // 总成本
-  this.profit = totalRevenue - totalCost - this.shippingCost - this.returnCost  // 净利润
-  
+  const totalRevenue = this.sellingPrice * this.soldQuantity // 总收入
+  const totalCost = this.purchasePrice * (this.purchaseQuantity + this.restockQuantity) // 总成本
+  this.profit = totalRevenue - totalCost - this.shippingCost - this.returnCost // 净利润
+
   next()
 })
 
 /**
  * 更新前中间件：自动更新修改时间
- * 
+ *
  * 在使用 findOneAndUpdate 方法更新文档时，
  * 自动设置 updatedAt 字段为当前时间
  */
-ClothingSchema.pre('findOneAndUpdate', function(next) {
+ClothingSchema.pre('findOneAndUpdate', function (next) {
   this.set({ updatedAt: new Date() })
   next()
 })
@@ -129,4 +134,3 @@ const ClothingModel = mongoose.model('Clothing', ClothingSchema)
 
 // 导出模型供其他模块使用
 module.exports = ClothingModel
-
