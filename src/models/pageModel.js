@@ -16,10 +16,14 @@ const PageSchema = new mongoose.Schema({
     maxlength: [100, '页面名称最多100个字符']
   },
   // 路由路径（已废弃，保留字段以兼容旧数据）
+  // 注意：此字段不应有唯一索引，因为允许为 null，多个 null 值会违反唯一性约束
   path: {
     type: String,
     required: false,
-    trim: true
+    trim: true,
+    // 明确不设置唯一索引，避免多个 null 值冲突
+    // 如果数据库中存在 path_1 唯一索引，需要通过迁移脚本删除
+    index: false
   },
   // 页面描述
   description: {

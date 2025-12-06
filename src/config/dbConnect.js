@@ -1,6 +1,38 @@
 const mongoose = require('mongoose')
 const config = require('./database')
 
+/**
+ * 清理废弃的数据库索引
+ * 在数据库连接成功后自动执行，确保不会因为历史遗留的索引导致错误
+ */
+async function cleanupObsoleteIndexes() {
+  try {
+    // 清理 Page 模型中废弃的 path 字段唯一索引
+    // path 字段已废弃，允许为 null，多个 null 值会违反唯一性约束
+    const PageModel = require('../models/pageModel')
+    const collection = PageModel.collection
+    const indexes = await collection.indexes()
+
+    // 检查是否存在 path_1 唯一索引（历史遗留问题）
+    const pathIndex = indexes.find((idx) => idx.name === 'path_1' && idx.unique)
+
+    if (pathIndex) {
+      console.log('⚠️  检测到 path_1 唯一索引（已废弃），正在删除...')
+      try {
+        await collection.dropIndex('path_1')
+        console.log('✅ 成功删除 path_1 唯一索引')
+      } catch (dropError) {
+        if (!dropError.message.includes('index not found')) {
+          console.warn('⚠️  删除 path_1 索引失败:', dropError.message)
+        }
+      }
+    }
+  } catch (err) {
+    // 索引清理失败不应该阻止应用启动
+    console.warn('⚠️  清理废弃索引时出错:', err.message)
+  }
+}
+
 // 连接数据库
 const connectDB = async () => {
   try {
@@ -14,13 +46,13 @@ const connectDB = async () => {
       console.log(`认证数据库 (authSource): ${config.options.authSource}`)
     }
 
-    // 先设置事件监听器
-    mongoose.connection.once('open', () => {
-      console.log(`✅ 成功连接到 MongoDB`)
-      console.log(`数据库名称: ${mongoose.connection.db.databaseName}`)
-    })
-
     await mongoose.connect(config.url, config.options)
+
+    console.log(`✅ 成功连接到 MongoDB`)
+    console.log(`数据库名称: ${mongoose.connection.db.databaseName}`)
+
+    // 数据库连接成功后执行初始化任务：清理废弃的索引
+    await cleanupObsoleteIndexes()
 
     mongoose.connection.on('error', (err) => {
       console.error('❌ MongoDB 连接错误:', err.message)

@@ -1,5 +1,23 @@
 const PageModel = require('../models/pageModel.js')
 
+/**
+ * 统一处理组件数据，确保所有组件都有 link 字段
+ * @param {Array} components - 组件数组
+ * @returns {Array} 处理后的组件数组
+ */
+function normalizeComponents(components) {
+  if (!components || !Array.isArray(components)) {
+    return []
+  }
+  return components.map((component) => {
+    // 确保 link 字段存在，如果不存在或为 null/undefined，设置为空字符串
+    if (component.link === undefined || component.link === null) {
+      component.link = ''
+    }
+    return component
+  })
+}
+
 // 创建页面
 const create = async (data) => {
   try {
@@ -48,6 +66,12 @@ const findById = async (id) => {
     const doc = await PageModel.findById(id)
       .populate('componentIds') // 填充完整组件信息
       .lean() // 返回纯对象，与 find 保持一致
+
+    // 统一处理组件数据，确保所有组件都有 link 字段
+    if (doc && doc.componentIds) {
+      doc.componentIds = normalizeComponents(doc.componentIds)
+    }
+
     return doc
   } catch (error) {
     console.error('Error finding page by ID:', error)
@@ -65,6 +89,12 @@ const update = async (pageId, updateFields) => {
     )
       .populate('componentIds') // 填充完整组件信息
       .lean() // 返回纯对象，与其他方法保持一致
+
+    // 统一处理组件数据，确保所有组件都有 link 字段
+    if (updatedPage && updatedPage.componentIds) {
+      updatedPage.componentIds = normalizeComponents(updatedPage.componentIds)
+    }
+
     return updatedPage
   } catch (error) {
     throw new Error('Error updating page: ' + error.message)
@@ -144,6 +174,14 @@ const findPublic = async (query = {}, page = 1, limit = 10) => {
       .lean()
       .maxTimeMS(30000)
       .exec()
+
+    // 统一处理组件数据，确保所有组件都有 link 字段
+    docs.forEach((doc) => {
+      if (doc && doc.componentIds) {
+        doc.componentIds = normalizeComponents(doc.componentIds)
+      }
+    })
+
     return docs
   } catch (error) {
     console.error('Error finding public pages:', error)
@@ -161,6 +199,12 @@ const findPublicById = async (id) => {
     })
       .populate('componentIds') // 填充完整组件信息
       .lean()
+
+    // 统一处理组件数据，确保所有组件都有 link 字段
+    if (doc && doc.componentIds) {
+      doc.componentIds = normalizeComponents(doc.componentIds)
+    }
+
     return doc
   } catch (error) {
     console.error('Error finding public page by ID:', error)

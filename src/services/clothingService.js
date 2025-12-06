@@ -256,6 +256,39 @@ const getBoundPage = async (clothingId) => {
   }
 }
 
+// 获取公开的服装详情（不包含敏感信息，如库存、成本等）
+const getPublicDetail = async (clothingId) => {
+  try {
+    const clothing = await ClothingModel.findById(clothingId)
+      .populate('pageId', 'name description isActive isPublished componentIds order')
+      .select(
+        'itemNumber imageUrl purchasePrice sellingPrice lengthOrWaist bustOrInseam pageId createdAt updatedAt'
+      )
+      .lean()
+
+    if (!clothing) {
+      throw new Error('Clothing item not found')
+    }
+
+    // 只返回公开信息，不包含库存、成本等敏感信息
+    return {
+      _id: clothing._id,
+      itemNumber: clothing.itemNumber,
+      imageUrl: clothing.imageUrl,
+      sellingPrice: clothing.sellingPrice,
+      purchasePrice: clothing.purchasePrice, // 保留进货价，前端可以显示原价对比
+      lengthOrWaist: clothing.lengthOrWaist,
+      bustOrInseam: clothing.bustOrInseam,
+      pageId: clothing.pageId || null, // 返回绑定的页面信息
+      createdAt: clothing.createdAt,
+      updatedAt: clothing.updatedAt
+    }
+  } catch (error) {
+    console.error('Error getting public clothing detail:', error)
+    throw new Error('Error getting public clothing detail: ' + error.message)
+  }
+}
+
 module.exports = {
   create,
   find,
@@ -266,5 +299,6 @@ module.exports = {
   getInventoryStats,
   bindPage,
   unbindPage,
-  getBoundPage
+  getBoundPage,
+  getPublicDetail
 }

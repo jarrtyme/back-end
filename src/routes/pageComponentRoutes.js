@@ -126,7 +126,8 @@ router.post('/create', async (req, res) => {
         descriptions: (item.descriptions || []).map((desc) => ({
           text: typeof desc === 'string' ? desc : desc.text || '',
           createdAt: desc.createdAt || new Date()
-        }))
+        })),
+        clothingId: item.clothingId || null // 支持关联服装ID
       })),
       order: parseInt(order, 10) || 0,
       isActive: Boolean(isActive),
@@ -213,7 +214,8 @@ router.post('/update', async (req, res) => {
         descriptions: (item.descriptions || []).map((desc) => ({
           text: typeof desc === 'string' ? desc : desc.text || '',
           createdAt: desc.createdAt || new Date()
-        }))
+        })),
+        clothingId: item.clothingId || null // 支持关联服装ID
       }))
     }
 

@@ -4,6 +4,22 @@ const router = express.Router()
 const ClothingService = require('../services/clothingService')
 const { authenticateToken, refreshTokenIfNeeded } = require('../middlewares/authMiddleware')
 
+// 公开接口：获取服装详情（不需要登录）
+router.post('/getPublicDetail', async (req, res) => {
+  try {
+    const { id } = req.body
+    if (!id) {
+      return res.error('ID is required', 400)
+    }
+
+    const clothingDetail = await ClothingService.getPublicDetail(id)
+    res.success(clothingDetail, 'Public clothing detail retrieved successfully')
+  } catch (error) {
+    console.error('Error getting public clothing detail:', error)
+    res.error(error.message || 'Error getting public clothing detail', 500)
+  }
+})
+
 // 所有服装管理路由都需要鉴权，并支持无感刷新 token
 router.use(authenticateToken)
 router.use(refreshTokenIfNeeded)

@@ -103,6 +103,12 @@ const PageComponentSchema = new mongoose.Schema({
             }
           ],
           default: []
+        },
+        // 关联的服装ID（可选，用于跳转到服装详情页）
+        clothingId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Clothing',
+          default: null
         }
       }
     ],
