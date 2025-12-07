@@ -1,4 +1,5 @@
 const PageModel = require('../models/pageModel.js')
+const mongoose = require('mongoose')
 
 /**
  * 统一处理组件数据，确保所有组件都有 link 字段
@@ -189,14 +190,36 @@ const findPublic = async (query = {}, page = 1, limit = 10) => {
   }
 }
 
-// 根据ID查询单个已发布的页面（公开访问，无需鉴权）
-const findPublicById = async (id) => {
+// 根据ID或名称查询单个已发布的页面（公开访问，无需鉴权）
+const findPublicById = async (idOrName) => {
   try {
-    const doc = await PageModel.findOne({
-      _id: id,
+    // 判断输入参数是否为有效的 MongoDB ObjectId
+    // ObjectId 必须是24个十六进制字符，且能成功创建 ObjectId 对象
+    let isObjectId = false
+    if (typeof idOrName === 'string' && idOrName.length === 24) {
+      try {
+        const objectId = new mongoose.Types.ObjectId(idOrName)
+        isObjectId = objectId.toString() === idOrName
+      } catch (e) {
+        isObjectId = false
+      }
+    }
+
+    // 构建查询条件
+    const query = {
       isPublished: true,
       isActive: true
-    })
+    }
+
+    if (isObjectId) {
+      // 如果是有效的 ObjectId，按ID查询
+      query._id = idOrName
+    } else {
+      // 如果不是 ObjectId，按名称精确匹配查询
+      query.name = idOrName.trim()
+    }
+
+    const doc = await PageModel.findOne(query)
       .populate('componentIds') // 填充完整组件信息
       .lean()
 
@@ -207,8 +230,8 @@ const findPublicById = async (id) => {
 
     return doc
   } catch (error) {
-    console.error('Error finding public page by ID:', error)
-    throw new Error('Error finding public page by ID')
+    console.error('Error finding public page by ID or name:', error)
+    throw new Error('Error finding public page by ID or name')
   }
 }
 

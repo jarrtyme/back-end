@@ -165,7 +165,7 @@ PageComponentSchema.pre('findOneAndUpdate', function (next) {
 // 添加索引以优化查询性能
 PageComponentSchema.index({ isActive: 1, order: 1 }) // 复合索引：按启用状态和排序顺序
 PageComponentSchema.index({ createdAt: -1 }) // 创建时间索引：用于排序
-PageComponentSchema.index({ name: 1 }) // 名称索引：用于搜索
+PageComponentSchema.index({ name: 1 }, { unique: true }) // 名称唯一索引：用于搜索和唯一性约束
 
 // 创建 Mongoose 模型实例
 const PageComponentModel = mongoose.model('PageComponent', PageComponentSchema)

@@ -51,12 +51,13 @@ router.post('/public/list', async (req, res) => {
   }
 })
 
-// 根据ID查询单个已发布的页面（公开访问）
+// 根据ID或名称查询单个已发布的页面（公开访问）
+// 支持通过页面ID（MongoDB ObjectId）或页面名称查询
 router.post('/public/findById', async (req, res) => {
   try {
     const { id } = req.body
     if (!id) {
-      return res.error('ID is required', 400)
+      return res.error('ID or name is required', 400)
     }
 
     const page = await PageService.findPublicById(id)
@@ -66,8 +67,8 @@ router.post('/public/findById', async (req, res) => {
 
     res.success(page, 'Public page retrieved successfully')
   } catch (error) {
-    console.error('Error finding public page by ID:', error)
-    res.error('Error finding public page by ID', 500)
+    console.error('Error finding public page by ID or name:', error)
+    res.error('Error finding public page by ID or name', 500)
   }
 })
 

@@ -144,6 +144,10 @@ router.post('/create', async (req, res) => {
     res.success(component, 'Page component created successfully')
   } catch (error) {
     console.error('Error creating page component:', error)
+    // 如果是名称重复错误，返回400状态码
+    if (error.message.includes('组件名称已存在') || error.message.includes('duplicate key')) {
+      return res.error(error.message || '组件名称已存在，请使用其他名称', 400)
+    }
     res.error('Failed to create page component: ' + error.message, 500)
   }
 })
@@ -261,6 +265,10 @@ router.post('/update', async (req, res) => {
     res.success(updatedComponent, 'Page component updated successfully')
   } catch (error) {
     console.error('Error updating page component:', error)
+    // 如果是名称重复错误，返回400状态码
+    if (error.message.includes('组件名称已存在') || error.message.includes('duplicate key')) {
+      return res.error(error.message || '组件名称已存在，请使用其他名称', 400)
+    }
     res.error('Failed to update page component', 500)
   }
 })

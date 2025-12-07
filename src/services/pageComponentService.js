@@ -4,9 +4,23 @@ const PageModel = require('../models/pageModel.js')
 // 创建页面组件
 const create = async (data) => {
   try {
+    // 检查名称是否已存在
+    if (data.name) {
+      const existingComponent = await PageComponentModel.findOne({
+        name: data.name.trim()
+      })
+      if (existingComponent) {
+        throw new Error('组件名称已存在，请使用其他名称')
+      }
+    }
+
     const pageComponent = await PageComponentModel.create(data)
     return pageComponent
   } catch (error) {
+    // 如果是唯一索引冲突错误，返回友好提示
+    if (error.code === 11000 || error.message.includes('duplicate key')) {
+      throw new Error('组件名称已存在，请使用其他名称')
+    }
     console.error('Error creating page component:', error)
     throw new Error('Error creating page component: ' + error.message)
   }
@@ -59,6 +73,19 @@ const findById = async (id) => {
 // 更新页面组件信息
 const update = async (componentId, updateFields) => {
   try {
+    // 如果更新了名称，检查名称是否与其他组件重复
+    if (updateFields.name) {
+      const trimmedName = updateFields.name.trim()
+      const existingComponent = await PageComponentModel.findOne({
+        name: trimmedName,
+        _id: { $ne: componentId } // 排除当前组件自身
+      })
+      if (existingComponent) {
+        throw new Error('组件名称已存在，请使用其他名称')
+      }
+      updateFields.name = trimmedName
+    }
+
     const updatedComponent = await PageComponentModel.findByIdAndUpdate(
       componentId,
       { $set: updateFields },
@@ -66,6 +93,10 @@ const update = async (componentId, updateFields) => {
     )
     return updatedComponent
   } catch (error) {
+    // 如果是唯一索引冲突错误，返回友好提示
+    if (error.code === 11000 || error.message.includes('duplicate key')) {
+      throw new Error('组件名称已存在，请使用其他名称')
+    }
     throw new Error('Error updating page component: ' + error.message)
   }
 }
