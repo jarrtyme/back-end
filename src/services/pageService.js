@@ -193,13 +193,20 @@ const findPublic = async (query = {}, page = 1, limit = 10) => {
 // 根据ID或名称查询单个已发布的页面（公开访问，无需鉴权）
 const findPublicById = async (idOrName) => {
   try {
+    // 先 trim 处理，确保一致性
+    const trimmedIdOrName = typeof idOrName === 'string' ? idOrName.trim() : idOrName
+
+    if (!trimmedIdOrName) {
+      return null
+    }
+
     // 判断输入参数是否为有效的 MongoDB ObjectId
     // ObjectId 必须是24个十六进制字符，且能成功创建 ObjectId 对象
     let isObjectId = false
-    if (typeof idOrName === 'string' && idOrName.length === 24) {
+    if (typeof trimmedIdOrName === 'string' && trimmedIdOrName.length === 24) {
       try {
-        const objectId = new mongoose.Types.ObjectId(idOrName)
-        isObjectId = objectId.toString() === idOrName
+        const objectId = new mongoose.Types.ObjectId(trimmedIdOrName)
+        isObjectId = objectId.toString() === trimmedIdOrName
       } catch (e) {
         isObjectId = false
       }
@@ -213,10 +220,10 @@ const findPublicById = async (idOrName) => {
 
     if (isObjectId) {
       // 如果是有效的 ObjectId，按ID查询
-      query._id = idOrName
+      query._id = trimmedIdOrName
     } else {
       // 如果不是 ObjectId，按名称精确匹配查询
-      query.name = idOrName.trim()
+      query.name = trimmedIdOrName
     }
 
     const doc = await PageModel.findOne(query)
