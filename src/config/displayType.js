@@ -13,6 +13,7 @@ const DISPLAY_TYPES = {
   SEAMLESS: 'seamless',
   VIDEO: 'video',
   DETAIL: 'detail',
+  MARKDOWN: 'markdown',
   HEADER: 'header',
   FOOTER: 'footer'
 }

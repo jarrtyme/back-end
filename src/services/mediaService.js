@@ -261,9 +261,17 @@ const removeDescription = async (mediaId, descriptionId) => {
       throw new Error('Media item not found')
     }
 
-    // 从数组中删除指定描述
-    media.descriptions = media.descriptions.filter((desc) => desc._id.toString() !== descriptionId)
+    // 统一处理 ID 类型转换：确保 descriptionId 转换为字符串进行比较
+    const targetId = typeof descriptionId === 'string' ? descriptionId : String(descriptionId)
 
+    // 使用 Mongoose 的 id() 方法查找描述，更可靠
+    const description = media.descriptions.id(targetId)
+    if (!description) {
+      throw new Error('Description not found')
+    }
+
+    // 使用 remove() 方法删除子文档
+    description.remove()
     await media.save()
     return media
   } catch (error) {
@@ -280,8 +288,11 @@ const updateDescription = async (mediaId, descriptionId, newText) => {
       throw new Error('Media item not found')
     }
 
+    // 统一处理 ID 类型转换：确保 descriptionId 转换为字符串
+    const targetId = typeof descriptionId === 'string' ? descriptionId : String(descriptionId)
+
     // 更新指定描述
-    const description = media.descriptions.id(descriptionId)
+    const description = media.descriptions.id(targetId)
     if (!description) {
       throw new Error('Description not found')
     }
@@ -295,7 +306,71 @@ const updateDescription = async (mediaId, descriptionId, newText) => {
   }
 }
 
-// 批量添加描述
+// 统一保存描述（一次性处理添加、更新、删除）
+// descriptions: [{ _id: 'descriptionId', text: '描述文本' }, ...] 或 [{ text: '新描述' }, ...]
+// 如果 _id 存在且在原描述中存在，则更新；如果 _id 不存在，则添加；如果原描述中的某个 _id 不在新列表中，则删除
+const saveDescriptions = async (mediaId, descriptions) => {
+  try {
+    const media = await MediaModel.findById(mediaId)
+    if (!media) {
+      throw new Error('Media item not found')
+    }
+
+    // 统一处理 ID 类型转换
+    const normalizeId = (id) => {
+      if (!id) return null
+      return typeof id === 'string' ? id : String(id)
+    }
+
+    // 构建新描述的映射（用于快速查找）
+    const newDescMap = new Map()
+    const descriptionsToAdd = []
+
+    descriptions.forEach((desc) => {
+      const text = desc.text ? desc.text.trim() : ''
+      if (!text) return // 跳过空描述
+
+      if (desc._id) {
+        // 有 ID 的描述，需要更新或保留
+        const id = normalizeId(desc._id)
+        newDescMap.set(id, text)
+      } else {
+        // 没有 ID 的描述，需要添加
+        descriptionsToAdd.push({
+          text: text,
+          createdAt: new Date()
+        })
+      }
+    })
+
+    // 处理现有描述：更新、保留或删除
+    const descriptionsToKeep = []
+    media.descriptions.forEach((desc) => {
+      const id = normalizeId(desc._id)
+      if (newDescMap.has(id)) {
+        // 如果在新描述中存在，更新文本
+        const newText = newDescMap.get(id)
+        if (desc.text !== newText) {
+          desc.text = newText
+        }
+        descriptionsToKeep.push(desc)
+        newDescMap.delete(id) // 从映射中移除，表示已处理
+      }
+      // 如果不在新描述中，则会被删除（不添加到 descriptionsToKeep）
+    })
+
+    // 设置新的描述数组：保留的描述 + 新添加的描述
+    media.descriptions = [...descriptionsToKeep, ...descriptionsToAdd]
+
+    await media.save()
+    return media
+  } catch (error) {
+    console.error('Error saving descriptions:', error)
+    throw new Error('Error saving descriptions: ' + error.message)
+  }
+}
+
+// 批量添加描述（追加到现有描述后面，不覆盖）
 // items: [{ id: 'mediaId', texts: ['描述1', '描述2'] }, ...]
 const batchAddDescription = async (items) => {
   try {
@@ -334,14 +409,19 @@ const batchAddDescription = async (items) => {
           continue
         }
 
-        // 批量添加描述
+        // 过滤并处理新描述文本
         const newDescriptions = texts
           .filter((text) => text && text.trim())
           .map((text) => ({
             text: text.trim(),
             createdAt: new Date()
           }))
+          // 去重：检查是否已存在相同描述
+          .filter((newDesc) => {
+            return !media.descriptions.some((existingDesc) => existingDesc.text === newDesc.text)
+          })
 
+        // 批量追加新描述
         if (newDescriptions.length > 0) {
           media.descriptions.push(...newDescriptions)
           await media.save()
@@ -373,6 +453,63 @@ const batchAddDescription = async (items) => {
   }
 }
 
+// 批量保存描述（一次性处理多个文件的描述保存）
+// items: [{ id: 'mediaId', descriptions: [{ _id?: 'descriptionId', text: '描述文本' }, ...] }, ...]
+const batchSaveDescriptions = async (items) => {
+  try {
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new Error('Items array is required and cannot be empty')
+    }
+
+    const results = []
+    const errors = []
+
+    for (const item of items) {
+      try {
+        const { id, descriptions } = item
+        if (!id) {
+          errors.push({
+            id: id || 'unknown',
+            error: 'Media ID is required'
+          })
+          continue
+        }
+
+        if (!Array.isArray(descriptions)) {
+          errors.push({
+            id,
+            error: 'Descriptions must be an array'
+          })
+          continue
+        }
+
+        const updatedMedia = await saveDescriptions(id, descriptions)
+        results.push({
+          id,
+          success: true,
+          media: updatedMedia
+        })
+      } catch (error) {
+        errors.push({
+          id: item.id || 'unknown',
+          error: error.message
+        })
+      }
+    }
+
+    return {
+      success: results,
+      failed: errors,
+      total: items.length,
+      successCount: results.length,
+      failCount: errors.length
+    }
+  } catch (error) {
+    console.error('Error batch saving descriptions:', error)
+    throw new Error('Error batch saving descriptions: ' + error.message)
+  }
+}
+
 // 批量创建媒体记录
 // items: [{ type, url, filename, size, mimetype, descriptions }, ...]
 const batchCreate = async (items) => {
@@ -396,10 +533,12 @@ const batchCreate = async (items) => {
           continue
         }
 
-        if (!['image', 'video'].includes(type)) {
+        // 验证文件类型是否有效（现在支持所有文件类型）
+        const { isValidMediaType } = require('../config/mediaType')
+        if (!isValidMediaType(type)) {
           errors.push({
             url,
-            error: 'Type must be "image" or "video"'
+            error: `Invalid file type: ${type}. Supported types: image, video, document, archive, text, other`
           })
           continue
         }
@@ -459,6 +598,8 @@ module.exports = {
   addDescription,
   removeDescription,
   updateDescription,
+  saveDescriptions,
   batchAddDescription,
+  batchSaveDescriptions,
   batchCreate
 }

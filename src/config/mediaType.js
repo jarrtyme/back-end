@@ -2,12 +2,17 @@
  * 媒体类型配置
  * 与前端保持一致
  * 与 pageComponentModel.js 和 mediaModel.js 中的媒体类型枚举保持一致
+ * 现在支持所有文件类型，不仅仅是图片和视频
  */
 
-// 媒体类型枚举
+// 媒体类型枚举（支持所有文件类型）
 const MEDIA_TYPES = {
   IMAGE: 'image',
-  VIDEO: 'video'
+  VIDEO: 'video',
+  DOCUMENT: 'document',
+  ARCHIVE: 'archive',
+  TEXT: 'text',
+  OTHER: 'other'
 }
 
 // 媒体类型值数组（用于验证）

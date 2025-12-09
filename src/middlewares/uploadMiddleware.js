@@ -23,6 +23,7 @@ function getStorageDir(mimetype, originalname) {
     document: 'documents',
     archive: 'archives',
     text: 'texts',
+    markdown: 'texts', // Markdown 文件也存储在 texts 目录
     other: 'others'
   }
 

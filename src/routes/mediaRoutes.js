@@ -107,7 +107,10 @@ router.post('/create', async (req, res) => {
 
     const { isValidMediaType } = require('../config/mediaType')
     if (!isValidMediaType(type)) {
-      return res.error('Type must be "image" or "video"', 400)
+      return res.error(
+        'Invalid file type. Supported types: image, video, document, archive, text, other',
+        400
+      )
     }
 
     const normalizedUrl = normalizeUrlForStorage(url)
@@ -327,6 +330,29 @@ router.post('/updateDescription', async (req, res) => {
   } catch (error) {
     console.error('Error updating description:', error)
     res.error('Failed to update description', 500)
+  }
+})
+
+// 统一保存描述（一次性处理添加、更新、删除）
+router.post('/saveDescriptions', async (req, res) => {
+  try {
+    const { id, descriptions } = req.body
+    if (!id) {
+      return res.error('Media ID is required', 400)
+    }
+    if (!Array.isArray(descriptions)) {
+      return res.error('Descriptions must be an array', 400)
+    }
+
+    const updatedMedia = await MediaService.saveDescriptions(id, descriptions)
+
+    // 添加完整URL
+    const mediaWithUrl = addFileUrl(updatedMedia, req)
+
+    res.success(mediaWithUrl, 'Descriptions saved successfully')
+  } catch (error) {
+    console.error('Error saving descriptions:', error)
+    res.error('Failed to save descriptions: ' + error.message, 500)
   }
 })
 

@@ -97,8 +97,8 @@ function getFileTypeFromExtension(ext) {
   // 压缩包扩展名
   const archiveExts = ['.zip', '.rar', '.7z', '.tar', '.gz']
 
-  // 文本扩展名
-  const textExts = ['.txt', '.csv', '.json', '.xml', '.md']
+  // 文本扩展名（包含 .md）
+  const textExts = ['.txt', '.csv', '.json', '.xml', '.md', '.markdown']
 
   if (imageExts.includes(extWithDot)) return 'image'
   if (videoExts.includes(extWithDot)) return 'video'

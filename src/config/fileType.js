@@ -50,8 +50,8 @@ const DOCUMENT_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '
 // 压缩包扩展名列表（与前端保持一致）
 const ARCHIVE_EXTENSIONS = ['.zip', '.rar', '.7z', '.tar', '.gz']
 
-// 文本文件扩展名列表（与前端保持一致）
-const TEXT_EXTENSIONS = ['.txt', '.csv', '.json', '.xml', '.md']
+// 文本文件扩展名列表（与前端保持一致，包含 .md）
+const TEXT_EXTENSIONS = ['.txt', '.csv', '.json', '.xml', '.md', '.markdown']
 
 // 所有扩展名映射
 const EXTENSIONS_MAP = {

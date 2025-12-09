@@ -4,13 +4,13 @@ const { MEDIA_TYPE_VALUES, DEFAULT_MEDIA_TYPE } = require('../config/mediaType')
 /**
  * 媒体库数据模型
  *
- * 用于管理官网的图片和视频资源，以及对应的描述信息
- * - 支持图片和视频两种媒体类型
- * - 每个媒体可以有多个描述（数组）
+ * 用于管理所有类型的文件资源，以及对应的描述信息
+ * - 支持所有文件类型：image, video, document, archive, text, other
+ * - 每个文件可以有多个描述（数组）
  * - 描述可以动态添加和删除
  */
 const MediaSchema = new mongoose.Schema({
-  // 媒体类型：'image' 或 'video'
+  // 文件类型：'image', 'video', 'document', 'archive', 'text', 'other'
   type: {
     type: String,
     required: true,
